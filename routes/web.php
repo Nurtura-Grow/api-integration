@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\WebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,4 +16,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+Route::group([
+    'prefix' => 'webhook',
+    'as' => 'webhook.'
+], function () {
+    Route::post('/antares', [WebhookController::class, 'handleAntaresWebhook'])->name('antares');
+    Route::get('/antares', [WebhookController::class, 'handleAntaresWebhook'])->name('antares');
 });
