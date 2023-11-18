@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Models\Penanaman;
-use App\Models\InformasiLahan;
 use App\Models\SumberDataSensor;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,6 +15,11 @@ class DataSensor extends Model
     protected $primaryKey = 'id_sensor';
     protected $guarded = [
         'id_sensor'
+    ];
+    public $timestamps = false;
+
+    protected $fillable = [
+        'id_penanaman', 'suhu', 'kelembapan_udara', 'kelembapan_tanah', 'ph_tanah', 'timestamp_pengukuran'
     ];
     public function penanaman(): BelongsTo
     {
