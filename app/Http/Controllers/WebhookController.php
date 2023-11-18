@@ -68,11 +68,6 @@ class WebhookController extends Controller
                 'timestamp_pengukuran' => $jakartaTime,
             ]);
 
-            // Log incoming webhook payload
-            Log::info('Webhook Payload Received', [
-                'result' => $result,
-                'time' => $jakartaTime,
-            ]);
         }
 
         return response()->json([
