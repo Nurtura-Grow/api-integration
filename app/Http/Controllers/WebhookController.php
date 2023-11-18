@@ -67,7 +67,6 @@ class WebhookController extends Controller
                 'ph_tanah' => $result['pH'],
                 'timestamp_pengukuran' => $jakartaTime,
             ]);
-
         }
 
         return response()->json([
