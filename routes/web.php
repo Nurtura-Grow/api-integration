@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\WebhookController;
+use App\Http\Controllers\APIController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,9 +19,18 @@ Route::get('/', function () {
 });
 
 Route::group([
-    'prefix' => 'webhook',
-    'as' => 'webhook.'
+    'prefix' => 'antares',
+    'as' => 'antares.'
 ], function () {
-    Route::post('/antares', [WebhookController::class, 'handleAntaresWebhook'])->name('antares');
-    Route::get('/antares', [WebhookController::class, 'handleAntaresWebhook'])->name('antares');
+    Route::post('/webhook', [APIController::class, 'handleAntaresWebhook'])->name('antares');
+    Route::post('/downlink', [APIController::class, 'handleAntaresDownlink'])->name('antares');
+
+});
+
+Route::group([
+    'prefix' => 'ml',
+    'as' => 'ml.'
+], function () {
+    Route::post('/fertilizer', [APIController::class, 'fertilizer'])->name('fertilizer');
+    Route::post('/irrigation', [APIController::class, 'irrigation'])->name('irrigation');
 });
