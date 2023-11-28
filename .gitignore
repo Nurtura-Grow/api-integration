@@ -17,4 +17,4 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
-.ebextensions/*
+/.ebextensions/01-environment.config
