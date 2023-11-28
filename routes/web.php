@@ -22,8 +22,8 @@ Route::group([
     'prefix' => 'antares',
     'as' => 'antares.'
 ], function () {
-    Route::post('/webhook', [APIController::class, 'handleAntaresWebhook'])->name('antares');
-    Route::post('/downlink', [APIController::class, 'handleAntaresDownlink'])->name('antares');
+    Route::post('/webhook', [APIController::class, 'handleAntaresWebhook'])->name('webhook');
+    Route::post('/downlink', [APIController::class, 'handleAntaresDownlink'])->name('downlink');
 
 });
 
