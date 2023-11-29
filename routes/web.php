@@ -24,7 +24,6 @@ Route::group([
 ], function () {
     Route::post('/webhook', [APIController::class, 'handleAntaresWebhook'])->name('webhook');
     Route::post('/downlink', [APIController::class, 'handleAntaresDownlink'])->name('downlink');
-
 });
 
 Route::group([
