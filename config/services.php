@@ -30,5 +30,12 @@ return [
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
+    'ml_service' => [
+        'url' => env('URL_MACHINE_LEARNING'),
+    ],
 
+    'antares' => [
+        'url' => env('ANTARES_DEVICE'),
+        'access_key' => env('ANTARES_ACCESS_KEY'),
+    ],
 ];
