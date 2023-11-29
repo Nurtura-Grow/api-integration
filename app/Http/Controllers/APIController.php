@@ -6,8 +6,9 @@ use Carbon\Carbon;
 use App\Models\Message;
 use App\Models\Penanaman;
 use App\Models\DataSensor;
+use App\Models\LogAksi;
 use App\Models\RekomendasiPengairan;
-
+use App\Models\TipeInstruksi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Validator;
 
 class APIController extends Controller
 {
+    private $REKOMENDASI_AIR;
     function gpsToJakarta($gpsTime)
     {
         // GPS time is ahead of UTC by 315964800 seconds
@@ -151,7 +153,7 @@ class APIController extends Controller
                 $penanaman = Penanaman::where('alat_terpasang', true)->first()->id_penanaman;
 
                 // save data to database RekomendasiPengairan
-                RekomendasiPengairan::create([
+                $this->REKOMENDASI_AIR = RekomendasiPengairan::create([
                     'id_penanaman' => $penanaman,
                     'nyalakan_alat' => $klusterNyala,
                     'durasi_detik' => $klusterWaktu,
@@ -159,7 +161,7 @@ class APIController extends Controller
                     'saran' => $saran,
                     'created_at' => Carbon::now(),
                     'updated_at' => Carbon::now(),
-                ]);
+                ])->id_rekomendasi_air;
 
                 // Send request to Handle Downlink
                 $dataNyala = config('services.device.air_nyala');
@@ -179,6 +181,22 @@ class APIController extends Controller
                 if ($response->successful()) {
                     $responseBody = $response->json();
                     $data = $responseBody['data'];
+
+                    // Save to log aksi
+                    $id_tipe_instruksi = TipeInstruksi::where('nama_tipe', 'pengairan')->first()->id_tipe_instruksi;
+
+                    $log = LogAksi::create([
+                        'id_tipe_instruksi' => $id_tipe_instruksi,
+                        'id_penanaman' => $penanaman,
+                        'id_rekomendasi_pemupukan' => null,
+                        'id_rekomendasi_air' => $this->REKOMENDASI_AIR,
+                        'durasi' => $klusterWaktu,
+                    ]);
+
+                    return response()->json([
+                        "status" => $response->status(),
+                        "data" => $data,
+                    ]);
                 } else {
                     // Handle the error appropriately
                     return response()->json([

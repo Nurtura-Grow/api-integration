@@ -38,4 +38,11 @@ return [
         'url' => env('ANTARES_DEVICE'),
         'access_key' => env('ANTARES_ACCESS_KEY'),
     ],
+
+    'device' => [
+        'air_nyala' => env('RELAY_AIR_NYALA'),
+        'air_mati' => env('RELAY_AIR_MATI'),
+        'pupuk_nyala' => env('RELAY_PUPUK_NYALA'),
+        'pupuk_mati' => env('RELAY_PUPUK_MATI'),
+    ]
 ];
