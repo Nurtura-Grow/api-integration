@@ -1,0 +1,25 @@
+# .ebextensions/01-environment.config
+option_settings:
+  aws:elasticbeanstalk:container:php:phpini:
+    document_root: /public
+    composer_options: --no-dev
+  aws:elasticbeanstalk:application:environment:
+    APP_ENV: 'production'
+    APP_KEY: 'your-app-key'
+    APP_DEBUG: 'false'
+    # Database settings
+    RDS_CONNECTION: 'mysql'
+    RDS_HOSTNAME: 'your-rds-hostname'
+    RDS_PORT: 'your-rds-port'
+    RDS_DB_NAME: 'your-db-name'
+    RDS_USERNAME: 'your-username'
+    RDS_PASSWORD: 'your-password'
+    # Antares Settings
+    ANTARES_DEVICE: 'your-antares-device-link'
+    ANTARES_ACCESS_KEY: "your-antares-access-key"
+    URL_MACHINE_LEARNING: 'your-integration-with-ml-link'
+    RELAY_AIR_NYALA: AA00
+    RELAY_AIR_MATI: AA01
+    RELAY_PUPUK_NYALA: AA10
+    RELAY_PUPUK_MATI: AA11
+
