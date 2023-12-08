@@ -1,0 +1,5 @@
+version: 1
+cron:
+  - name: "schedule-run"
+    url: "/schedule/run"
+    schedule: "* * * * *"
