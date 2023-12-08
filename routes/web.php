@@ -1,7 +1,10 @@
 <?php
 
+use App\Http\Controllers\AntaresController;
+use App\Http\Controllers\MachineLearningController;
+use App\Http\Controllers\SchedulerController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\APIController;
+use Illuminate\Support\Facades\Artisan;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,20 +21,28 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/schedule/run', function () {
+    $exitCode = Artisan::call('schedule:run');
+    return response('Scheduled commands executed: ' . $exitCode , 200);
+});
+
+Route::get('/schedule/1hour', [SchedulerController::class, 'schedule1Hour']);
+Route::get('/schedule/irrigation', [SchedulerController::class, 'scheduleIrrigation']);
 
 Route::group([
     'prefix' => 'antares',
     'as' => 'antares.'
 ], function () {
-    Route::post('/webhook', [APIController::class, 'handleAntaresWebhook'])->name('webhook');
-    Route::post('/downlink', [APIController::class, 'handleAntaresDownlink'])->name('downlink');
+    Route::post('/webhook', [AntaresController::class, 'handleAntaresWebhook'])->name('webhook');
+    Route::post('/downlink', [AntaresController::class, 'handleAntaresDownlink'])->name('downlink');
 });
 
 Route::group([
     'prefix' => 'ml',
     'as' => 'ml.'
 ], function () {
-    Route::post('/predict-ml', [APIController::class, 'predictML'])->name('predict-ml');
-    Route::post('/fertilizer', [APIController::class, 'fertilizer'])->name('fertilizer');
-    Route::post('/irrigation', [APIController::class, 'irrigation'])->name('irrigation');
+    Route::post('/handle', [MachineLearningController::class, 'handleData'])->name('handle');
+    Route::post('/fertilizer', [MachineLearningController::class, 'fertilizer'])->name('fertilizer');
+    Route::post('/irrigation', [MachineLearningController::class, 'irrigation'])->name('irrigation');
+    Route::post('/predict', [MachineLearningController::class, 'predict'])->name('predict');
 });

@@ -40,9 +40,9 @@ return [
     ],
 
     'device' => [
-        'air_nyala' => env('RELAY_AIR_NYALA'),
-        'air_mati' => env('RELAY_AIR_MATI'),
+        'air_nyala_10_menit' => env('RELAY_AIR_NYALA_10_MENIT'),
+        'air_nyala_20_menit' => env('RELAY_AIR_NYALA_20_MENIT'),
+        'air_nyala_50_menit' => env('RELAY_AIR_NYALA_50_MENIT'),
         'pupuk_nyala' => env('RELAY_PUPUK_NYALA'),
-        'pupuk_mati' => env('RELAY_PUPUK_MATI'),
     ]
 ];
