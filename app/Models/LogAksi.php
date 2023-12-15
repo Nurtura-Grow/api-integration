@@ -25,4 +25,9 @@ class LogAksi extends Model
     {
         return $this->belongsTo(IrrigationController::class, 'id_irrigation_controller', 'id_irrigation_controller');
     }
+
+    public function fertilizer_controller(): BelongsTo
+    {
+        return $this->belongsTo(FertilizerController::class, 'id_fertilizer_controller', 'id_fertilizer_controller');
+    }
 }

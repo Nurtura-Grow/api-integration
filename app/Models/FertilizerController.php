@@ -14,4 +14,9 @@ class FertilizerController extends Model
         'id_fertilizer_controller'
     ];
 
+    // log
+    public function log_aksi()
+    {
+        return $this->hasOne(LogAksi::class, 'id_fertilizer_controller', 'id_fertilizer_controller');
+    }
 }

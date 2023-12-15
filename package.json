@@ -3,7 +3,9 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "vite build"
+        "build": "vite build",
+        "serve": "php artisan serve --port=8080",
+        "ngrok": "G:\\laravel-app\\ngrok.exe http 8080"
     },
     "devDependencies": {
         "axios": "^1.6.1",
