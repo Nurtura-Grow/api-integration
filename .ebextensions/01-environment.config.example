@@ -17,9 +17,9 @@ option_settings:
     # Antares Settings
     ANTARES_DEVICE: 'your-antares-device-link'
     ANTARES_ACCESS_KEY: "your-antares-access-key"
+    TIPE_AIR: "1"
+    TIPE_PUPUK: "2"
+    RELAY_MATI: "CLOSE"
+    RELAY_NYALA: "OPEN"
+    # ML Service Link
     URL_MACHINE_LEARNING: 'your-integration-with-ml-link'
-    RELAY_AIR_NYALA: AA00
-    RELAY_AIR_MATI: AA01
-    RELAY_PUPUK_NYALA: AA10
-    RELAY_PUPUK_MATI: AA11
-
