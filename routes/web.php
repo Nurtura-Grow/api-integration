@@ -26,9 +26,6 @@ Route::get('/schedule/run', function () {
     return response('Scheduled commands executed: ' . $exitCode , 200);
 });
 
-Route::get('/schedule/1hour', [SchedulerController::class, 'schedule1Hour']);
-Route::get('/schedule/irrigation', [SchedulerController::class, 'scheduleIrrigation']);
-
 Route::group([
     'prefix' => 'antares',
     'as' => 'antares.'
