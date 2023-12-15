@@ -9,8 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 
-use Illuminate\Support\Facades\Log;
-
 class AntaresController extends Controller
 {
     /**
@@ -24,10 +22,10 @@ class AntaresController extends Controller
     {
         // Access the 'con' key from the request payload
         $input = $request->input('m2m:sgn.m2m:nev.m2m:rep.m2m:cin');
-        $con = $input['con'];
-        $ct = Carbon::parse($input['ct'])->format('Y-m-d H:i:00');
 
-        if ($con) {
+        if ($input) {
+            $con = $input['con'];
+            $ct = Carbon::parse($input['ct'])->format('Y-m-d H:i:00');
             // Decode the JSON content of 'con' to an array
             $conArray = json_decode($con, true);
 
