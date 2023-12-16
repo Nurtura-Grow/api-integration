@@ -4,6 +4,7 @@ use App\Http\Controllers\AntaresController;
 use App\Http\Controllers\MachineLearningController;
 use App\Http\Controllers\SchedulerController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Artisan;
 
 /*

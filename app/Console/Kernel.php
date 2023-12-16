@@ -13,9 +13,19 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        $schedule->call('App\Http\Controllers\SchedulerController@scheduleIrrigation')->everyMinute();
-        $schedule->call('App\Http\Controllers\SchedulerController@scheduleFertilizer')->everyMinute();
-        $schedule->call([SchedulerController::class, 'schedule1Hour'])->hourly();
+        $schedule->call('App\Http\Controllers\SchedulerController@scheduleIrrigation')
+            ->name('scheduleIrrigation')
+            ->everyMinute()
+            ->onOneServer();
+
+        $schedule->call('App\Http\Controllers\SchedulerController@scheduleFertilizer')
+            ->name('scheduleFertilizer')
+            ->everyMinute()
+            ->onOneServer();
+        $schedule->call([SchedulerController::class, 'schedule1Hour'])
+            ->name('schedule1Hour')
+            ->hourly()
+            ->onOneServer();
     }
 
     /**

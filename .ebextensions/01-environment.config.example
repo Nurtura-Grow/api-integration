@@ -7,19 +7,16 @@ option_settings:
     APP_ENV: 'production'
     APP_KEY: 'your-app-key'
     APP_DEBUG: 'false'
-    # Database settings
     RDS_CONNECTION: 'mysql'
     RDS_HOSTNAME: 'your-rds-hostname'
     RDS_PORT: 'your-rds-port'
     RDS_DB_NAME: 'your-db-name'
     RDS_USERNAME: 'your-username'
     RDS_PASSWORD: 'your-password'
-    # Antares Settings
     ANTARES_DEVICE: 'your-antares-device-link'
     ANTARES_ACCESS_KEY: "your-antares-access-key"
     TIPE_AIR: "1"
     TIPE_PUPUK: "2"
     RELAY_MATI: "CLOSE"
     RELAY_NYALA: "OPEN"
-    # ML Service Link
     URL_MACHINE_LEARNING: 'your-integration-with-ml-link'

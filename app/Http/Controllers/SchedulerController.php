@@ -41,6 +41,10 @@ class SchedulerController extends Controller
             ->where('timestamp_pengukuran', '<=', Carbon::now())
             ->get();
 
+        if (!$dataTerakhir) {
+            return;
+        }
+
         // Jadikan rata-rata lalu ubah ke json
         $temperature = $dataTerakhir->avg('suhu');
         $humidity = $dataTerakhir->avg('kelembapan_udara');
