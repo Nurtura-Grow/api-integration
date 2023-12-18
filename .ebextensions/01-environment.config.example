@@ -15,8 +15,11 @@ option_settings:
     RDS_PASSWORD: 'your-password'
     ANTARES_DEVICE: 'your-antares-device-link'
     ANTARES_ACCESS_KEY: "your-antares-access-key"
-    TIPE_AIR: "1"
-    TIPE_PUPUK: "2"
-    RELAY_MATI: "CLOSE"
-    RELAY_NYALA: "OPEN"
+    TIPE_AIR: "AA0"
+    TIPE_PUPUK: "AA1"
+    RELAY_MATI: "1"
+    RELAY_NYALA: "0"
     URL_MACHINE_LEARNING: 'your-integration-with-ml-link'
+    CACHE_DRIVER: redis
+    REDIS_HOST: 'your-aws-redis-endpoint'
+    REDIS_PORT: 6379

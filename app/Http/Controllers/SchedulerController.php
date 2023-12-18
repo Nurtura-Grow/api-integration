@@ -295,7 +295,7 @@ class SchedulerController extends Controller
      *
      * @return void
      */
-    public function scheduleFertilizer()
+    public static function scheduleFertilizer()
     {
         // Cek di log aksi, apakah sudah ada data pengairan yang dikirim ke Antares
         // Jika sudah ada, cek apakah waktu sekarang (di irrigation controller) == waktu selesai
