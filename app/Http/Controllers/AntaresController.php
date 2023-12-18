@@ -149,6 +149,7 @@ class AntaresController extends Controller
             'm2m:cin' => [
                 // Change json to string from "con" key
                 'con' => json_encode([
+                    "type" => 'downlink',
                     "data" => $request->input('data'),
                 ]),
             ],
