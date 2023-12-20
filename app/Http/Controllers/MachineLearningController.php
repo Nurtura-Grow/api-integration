@@ -198,8 +198,6 @@ class MachineLearningController extends Controller
             'kelembapan_udara' => $response_predict['Humidity'],
             'kelembapan_tanah' => $response_predict['SoilMoisture'],
             'timestamp_prediksi_sensor' => $response_predict['Time'],
-            'created_at' => Carbon::now(),
-            'updated_at' => Carbon::now(),
         ]);
 
         // Run irrigation to get the irrigation command

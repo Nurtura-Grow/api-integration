@@ -14,4 +14,6 @@ class PrediksiSensor extends Model
         'id_prediksi_sensor'
     ];
 
+    public $timestamps = false;
+
 }

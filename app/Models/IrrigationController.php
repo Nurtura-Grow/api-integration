@@ -14,6 +14,11 @@ class IrrigationController extends Model
         'id_irrigation_controller'
     ];
 
+    public function penanaman()
+    {
+        return $this->belongsTo(Penanaman::class, 'id_penanaman', 'id_penanaman');
+    }
+
     public function log_aksi()
     {
         return $this->hasOne(LogAksi::class, 'id_irrigation_controller', 'id_irrigation_controller');

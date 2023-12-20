@@ -15,17 +15,13 @@ class Kernel extends ConsoleKernel
     {
         $schedule->call('App\Http\Controllers\SchedulerController@scheduleIrrigation')
             ->name('scheduleIrrigation')
-            ->everyMinute()
-            ->onOneServer();
-
+            ->everyMinute();
         $schedule->call('App\Http\Controllers\SchedulerController@scheduleFertilizer')
             ->name('scheduleFertilizer')
-            ->everyMinute()
-            ->onOneServer();
+            ->everyMinute();
         $schedule->call([SchedulerController::class, 'schedule1Hour'])
             ->name('schedule1Hour')
-            ->hourly()
-            ->onOneServer();
+            ->hourly();
     }
 
     /**

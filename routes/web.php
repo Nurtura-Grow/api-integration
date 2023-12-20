@@ -22,9 +22,13 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/schedule/run', function () {
-    $exitCode = Artisan::call('schedule:run');
-    return response('Scheduled commands executed: ' . $exitCode , 200);
+Route::group([
+    'prefix' => 'scheduler',
+    'as' => 'scheduler.'
+], function () {
+    Route::get('/irrigation', 'App\Http\Controllers\SchedulerController@scheduleIrrigation')->name('irrigation');
+    Route::get('/fertilizer', 'App\Http\Controllers\SchedulerController@scheduleFertilizer')->name('fertilizer');
+    Route::get('/1hour', 'App\Http\Controllers\SchedulerController@schedule1Hour')->name('1hour');
 });
 
 Route::group([

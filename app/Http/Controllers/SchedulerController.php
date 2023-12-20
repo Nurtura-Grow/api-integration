@@ -36,12 +36,13 @@ class SchedulerController extends Controller
      */
     public static function schedule1Hour()
     {
+        Log::info('Scheduler 1 hour is running');
         // Ambil data 1 jam terakhir (seluruh datanya)
         $dataTerakhir = DataSensor::where('timestamp_pengukuran', '>=', Carbon::now()->subHour())
             ->where('timestamp_pengukuran', '<=', Carbon::now())
             ->get();
 
-        if (!$dataTerakhir) {
+        if ($dataTerakhir->count() < 1) {
             return;
         }
 
@@ -59,18 +60,24 @@ class SchedulerController extends Controller
         $id_penanaman = DataSensor::latest()->first()->id_penanaman;
 
         // Kirim data ke route(ml.irrigation)
-        $response_irrigation = Http::post(route('ml.irrigation'), $data)->json();
-        $time_irrigation = Carbon::now()->format('Y-m-d H:i');
+        $response_irrigation = Http::post(route('ml.irrigation'), $data);
 
-        // Simpan data ke database rekomendasi_pengairan
-        self::saveDatatoRekomendasiPengairan($id_penanaman, $response_irrigation['data'], $time_irrigation);
+        if ($response_irrigation->successful()) {
+            $response_irrigation = $response_irrigation->json();
+            $time_irrigation = Carbon::now()->format('Y-m-d H:i');
 
-        // Kirim data ke route(ml.predict)
-        $response_predict = Http::post(route('ml.predict'), $data)->json();
-        $time_prediksi = $response_predict['data']['predict']['Time'];
+            // Simpan data ke database rekomendasi_pengairan
+            self::saveDatatoRekomendasiPengairan($id_penanaman, $response_irrigation['data'], $time_irrigation);
 
-        // Simpan data ke database rekomendasi_pemupukan
-        self::saveDatatoRekomendasiPengairan($id_penanaman, $response_predict['data']['irrigation']['data'], $time_prediksi);
+            // Kirim data ke route(ml.predict)
+            $response_predict = Http::post(route('ml.predict'), $data)->json();
+            $time_prediksi = $response_predict['data']['predict']['Time'];
+
+            // Simpan data ke database rekomendasi_pemupukan
+            self::saveDatatoRekomendasiPengairan($id_penanaman, $response_predict['data']['irrigation']['data'], $time_prediksi);
+        }
+
+        return;
     }
 
     /**
@@ -106,7 +113,6 @@ class SchedulerController extends Controller
 
         // Simpan data ke database rekomendasi_pengairan
         $id_rekomendasi_pengairan = RekomendasiPengairan::create([
-            'id_penanaman' => $id_penanaman,
             'nyalakan_alat' => $nyalakanAlat,
             'durasi_detik' => $durasiNyala,
             'kondisi' => $kondisi,
@@ -117,6 +123,7 @@ class SchedulerController extends Controller
         if ($nyalakanAlat) {
             // Simpan data ke database irrigation_controller
             IrrigationController::create([
+                'id_penanaman' => $id_penanaman,
                 'id_rekomendasi_air' => $id_rekomendasi_pengairan,
                 'mode' => 'auto',
                 'willSend' => 1,
@@ -153,6 +160,7 @@ class SchedulerController extends Controller
      */
     public static function scheduleIrrigation()
     {
+        Log::info("schedule irrigation started");
         // Cek di log aksi, apakah sudah ada data pengairan yang dikirim ke Antares
         // Jika sudah ada, cek apakah waktu sekarang (di irrigation controller) == waktu selesai
         // kalau tidak, selesaikan fungsi
@@ -191,9 +199,13 @@ class SchedulerController extends Controller
 
         // Kalau tidak ada aksi yang sedang berjalan
         // Ambil data irrigation_controller
+        $now = Carbon::now();
+
         $irrigation_controller = IrrigationController::where('willSend', 1)
             ->where('isSent', 0)
-            ->where('waktu_mulai', '=', Carbon::now()->toDateTimeString());
+            ->whereDate('waktu_mulai', '=', $now->format('Y-m-d'))
+            ->whereTime('waktu_mulai', '=', $now->format('H:i'))
+            ->get();
 
         // Jika tidak ada data, selesaikan fungsi
         if ($irrigation_controller->count() <= 0) {
@@ -297,6 +309,8 @@ class SchedulerController extends Controller
      */
     public static function scheduleFertilizer()
     {
+        Log::info("Schedule Fertilizer");
+
         // Cek di log aksi, apakah sudah ada data pengairan yang dikirim ke Antares
         // Jika sudah ada, cek apakah waktu sekarang (di irrigation controller) == waktu selesai
         // kalau tidak, selesaikan fungsi
@@ -313,7 +327,6 @@ class SchedulerController extends Controller
             if ($logAksi->first()->id_tipe_instruksi != $tipe) {
                 return;
             }
-
             $waktu_selesai = Carbon::parse($logAksi->first()->fertilizer_controller->waktu_selesai)->format('Y-m-d H:i');
 
             // Cek apakah alat sudah selesai berjalan
@@ -335,9 +348,13 @@ class SchedulerController extends Controller
         }
 
         // Ambil data fertilizer_control
+        $now = Carbon::now();
         $fertilizer_control = FertilizerController::where('willSend', 1)
             ->where('isSent', 0)
-            ->where('waktu_mulai', '=', Carbon::now()->toDateTimeString());
+            ->whereDate('waktu_mulai', '=', $now->format('Y-m-d'))
+            ->whereTime('waktu_mulai', '=', $now->format('H:i'))
+            ->get();
+
 
         // Jika tidak ada data, selesaikan fungsi
         if ($fertilizer_control->count() <= 0) {
@@ -373,7 +390,7 @@ class SchedulerController extends Controller
             LogAksi::create([
                 'id_penanaman' => $id_penanaman,
                 'id_tipe_instruksi' => $tipe,
-                'id_fertilizer_control' => $id_fertilizer_control,
+                'id_fertilizer_controller' => $id_fertilizer_control,
                 'durasi' => $durasi,
                 'sedang_berjalan' => true,
                 'created_by' => '1',

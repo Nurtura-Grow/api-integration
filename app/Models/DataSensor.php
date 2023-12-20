@@ -16,7 +16,7 @@ class DataSensor extends Model
     protected $guarded = [
         'id_sensor'
     ];
-    public $timestamps = true;
+    public $timestamps = false;
 
     protected $fillable = [
         'id_penanaman', 'suhu', 'kelembapan_udara', 'kelembapan_tanah', 'ph_tanah', 'timestamp_pengukuran'

@@ -14,7 +14,11 @@ class FertilizerController extends Model
         'id_fertilizer_controller'
     ];
 
-    // log
+    public function penanaman()
+    {
+        return $this->belongsTo(Penanaman::class, 'id_penanaman', 'id_penanaman');
+    }
+
     public function log_aksi()
     {
         return $this->hasOne(LogAksi::class, 'id_fertilizer_controller', 'id_fertilizer_controller');
