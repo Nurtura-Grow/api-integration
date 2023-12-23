@@ -46,10 +46,10 @@ class SchedulerController extends Controller
             return;
         }
 
-        // Jadikan rata-rata lalu ubah ke json
-        $temperature = $dataTerakhir->avg('suhu');
-        $humidity = $dataTerakhir->avg('kelembapan_udara');
-        $soilMoisture = $dataTerakhir->avg('kelembapan_tanah');
+        // Jadikan rata-rata lalu ubah ke json, round ke 2 desimal
+        $temperature =round( $dataTerakhir->avg('suhu_udara'), 3);
+        $humidity = round($dataTerakhir->avg('kelembapan_udara'), 3);
+        $soilMoisture = round($dataTerakhir->avg('kelembapan_tanah'), 3);
 
         $data = [
             'temperature' => $temperature,
@@ -57,24 +57,28 @@ class SchedulerController extends Controller
             'SoilMoisture' => $soilMoisture
         ];
 
-        $id_penanaman = DataSensor::latest()->first()->id_penanaman;
+        $id_penanaman = DataSensor::orderBy('timestamp_pengukuran', 'desc')->first()->id_penanaman;
 
         // Kirim data ke route(ml.irrigation)
         $response_irrigation = Http::post(route('ml.irrigation'), $data);
 
         if ($response_irrigation->successful()) {
             $response_irrigation = $response_irrigation->json();
-            $time_irrigation = Carbon::now()->format('Y-m-d H:i');
+            // Kasih Tambahan 1 menit supaya scheduler bisa jalan untuk mengirim perintah
+            $time_irrigation = Carbon::now()->addMinute()->format('Y-m-d H:i');
 
             // Simpan data ke database rekomendasi_pengairan
             self::saveDatatoRekomendasiPengairan($id_penanaman, $response_irrigation['data'], $time_irrigation);
 
             // Kirim data ke route(ml.predict)
-            $response_predict = Http::post(route('ml.predict'), $data)->json();
-            $time_prediksi = $response_predict['data']['predict']['Time'];
+            $response_predict = Http::post(route('ml.predict'), $data);
+            if($response_predict->successful()){
+                $response_predict = $response_predict->json();
+                $time_prediksi = $response_predict['data']['predict']['Time'];
 
-            // Simpan data ke database rekomendasi_pemupukan
-            self::saveDatatoRekomendasiPengairan($id_penanaman, $response_predict['data']['irrigation']['data'], $time_prediksi);
+                // Simpan data ke database rekomendasi_pemupukan
+                self::saveDatatoRekomendasiPengairan($id_penanaman, $response_predict['data']['irrigation']['data'], $time_prediksi);
+            }
         }
 
         return;
@@ -106,6 +110,8 @@ class SchedulerController extends Controller
             'message' => $data['Saran']
         ])->id;
 
+        if($data['Informasi Kluster'] == null || $data == null) return;
+
         $nyalakanAlat = $data['Informasi Kluster']['nyala'];
         $durasiNyala = $data['Informasi Kluster']['waktu'];
 
@@ -134,6 +140,8 @@ class SchedulerController extends Controller
                 'waktu_selesai' => Carbon::parse($time_irrigation)->addSeconds($durasiNyala),
             ]);
         }
+
+        return;
     }
 
     /**

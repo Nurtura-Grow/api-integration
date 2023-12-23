@@ -21,7 +21,7 @@ class Kernel extends ConsoleKernel
             ->everyMinute();
         $schedule->call([SchedulerController::class, 'schedule1Hour'])
             ->name('schedule1Hour')
-            ->hourly();
+            ->everyMinute();
     }
 
     /**

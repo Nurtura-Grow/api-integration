@@ -16,6 +16,8 @@ class RekomendasiPemupukan extends Model
         'id_rekomendasi_pemupukan'
     ];
 
+    public $timestamps = false;
+
     public function message(): BelongsTo
     {
         return $this->belongsTo(Message::class, 'pesan', 'id');
