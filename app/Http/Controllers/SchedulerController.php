@@ -46,10 +46,10 @@ class SchedulerController extends Controller
             return;
         }
 
-        // Jadikan rata-rata lalu ubah ke json, round ke 2 desimal
-        $temperature =round( $dataTerakhir->avg('suhu_udara'), 3);
-        $humidity = round($dataTerakhir->avg('kelembapan_udara'), 3);
-        $soilMoisture = round($dataTerakhir->avg('kelembapan_tanah'), 3);
+        // Jadikan rata-rata lalu ubah ke json
+        $temperature = $dataTerakhir->avg('suhu_udara');
+        $humidity = $dataTerakhir->avg('kelembapan_udara');
+        $soilMoisture = $dataTerakhir->avg('kelembapan_tanah');
 
         $data = [
             'temperature' => $temperature,
@@ -72,7 +72,7 @@ class SchedulerController extends Controller
 
             // Kirim data ke route(ml.predict)
             $response_predict = Http::post(route('ml.predict'), $data);
-            if($response_predict->successful()){
+            if ($response_predict->successful()) {
                 $response_predict = $response_predict->json();
                 $time_prediksi = $response_predict['data']['predict']['Time'];
 
@@ -110,7 +110,7 @@ class SchedulerController extends Controller
             'message' => $data['Saran']
         ])->id;
 
-        if($data['Informasi Kluster'] == null || $data == null) return;
+        if ($data['Informasi Kluster'] == null || $data == null) return;
 
         $nyalakanAlat = $data['Informasi Kluster']['nyala'];
         $durasiNyala = $data['Informasi Kluster']['waktu'];
