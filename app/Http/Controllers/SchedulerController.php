@@ -149,18 +149,17 @@ class SchedulerController extends Controller
      * ada data pengairan yang harus dikirim ke Antares.
      * 1. cek apakah ada data pengairan/pemupukan yang sedang dikirim ke Antares
      *      a. kalau ada, cek apakah sudah selesai
-     *          i. kalau sudah selesai, ubah sedang_berjalan menjadi 0
+     *          i. kalau sudah selesai, ubah sedang_berjalan menjadi 0, kirim data close ke Antares
      *          ii. kalau belum selesai, selesaikan fungsi
      * b. kalau tidak ada, lanjut ke langkah 2
      * 2. Ambil data irrigation_controller.
      * 3. Periksa apakah willSend = 1 dan isSent = 0:
      *    a. Jika tidak sesuai, selesaikan fungsi.
-     *    b. Jika sesuai, lanjut ke langkah 3.
+     *    b. Jika sesuai, lanjut ke langkah 4.
      * 4. Periksa apakah waktu_mulai sesuai dengan sekarang:
      *    a. Jika tidak sesuai, selesaikan fungsi.
-     *    b. Jika sesuai, lanjut ke langkah 4.
-     * 5. Ambil data durasi dari irrigation_controller,
-     *    decode menjadi kode Antares, kirim ke Antares.
+     *    b. Jika sesuai, lanjut ke langkah 5.
+     * 5. Kirim data open ke antares
      * 6. Update data isSent = 1.
      * 7. Tambahkan data ke log_aksi.
      *
@@ -298,18 +297,17 @@ class SchedulerController extends Controller
      *
      * 1. cek apakah ada data pemupukan/pengairan yang sedang berjalan di alat
      *      a. kalau ada, cek apakah sudah selesai
-     *          i. kalau sudah selesai, ubah sedang_berjalan menjadi 0
+     *          i. kalau sudah selesai, ubah sedang_berjalan menjadi 0, kirim perintah close ke Antares
      *          ii. kalau belum selesai, selesaikan fungsi
      * b. kalau tidak ada, lanjut ke langkah 2
      * 2. Ambil data fertilizer_control.
      * 3. Periksa apakah waktu_mulai sesuai dengan sekarang:
      *    a. Jika tidak sesuai, selesaikan fungsi.
-     *    b. Jika sesuai, lanjut ke langkah 3.
+     *    b. Jika sesuai, lanjut ke langkah 4.
      * 4. Periksa apakah willSend = 1 dan isSent = 0:
      *    a. Jika tidak sesuai, selesaikan fungsi.
-     *    b. Jika sesuai, lanjut ke langkah 4.
-     * 5. Ambil data durasi dari fertilizer_control,
-     *    decode menjadi kode Antares, kirim ke Antares.
+     *    b. Jika sesuai, lanjut ke langkah 5.
+     * 5. Kirim data open ke antares
      * 6. Update data isSent = 1.
      * 7. Tambahkan data ke log_aksi.
      *
