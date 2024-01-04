@@ -10,7 +10,6 @@ use App\Models\DataSensor;
 use App\Models\TipeInstruksi;
 use App\Models\IrrigationController;
 use App\Models\FertilizerController;
-use App\Models\RekomendasiPemupukan;
 use App\Models\RekomendasiPengairan;
 
 use Illuminate\Support\Facades\Http;

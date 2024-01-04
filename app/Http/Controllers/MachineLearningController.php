@@ -189,7 +189,7 @@ class MachineLearningController extends Controller
     public function predict(Request $request)
     {
         // Get prediction result from ML service
-        $response_predict = Http::post($this->URL_PREDICT)->json();
+        $response_predict = Http::get($this->URL_PREDICT)->json();
 
         // Save prediction result to database
         PrediksiSensor::create([
@@ -198,6 +198,7 @@ class MachineLearningController extends Controller
             'kelembapan_udara' => $response_predict['Humidity'],
             'kelembapan_tanah' => $response_predict['SoilMoisture'],
             'timestamp_prediksi_sensor' => $response_predict['Time'],
+            'created_at' => Carbon::now(),
         ]);
 
         // Run irrigation to get the irrigation command
