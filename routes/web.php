@@ -2,10 +2,7 @@
 
 use App\Http\Controllers\AntaresController;
 use App\Http\Controllers\MachineLearningController;
-use App\Http\Controllers\SchedulerController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Artisan;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,7 +40,6 @@ Route::group([
     'prefix' => 'ml',
     'as' => 'ml.'
 ], function () {
-    Route::post('/handle', [MachineLearningController::class, 'handleData'])->name('handle');
     Route::post('/fertilizer', [MachineLearningController::class, 'fertilizer'])->name('fertilizer');
     Route::post('/irrigation', [MachineLearningController::class, 'irrigation'])->name('irrigation');
     Route::post('/predict', [MachineLearningController::class, 'predict'])->name('predict');

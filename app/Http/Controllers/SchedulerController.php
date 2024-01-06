@@ -18,64 +18,69 @@ use Illuminate\Support\Facades\Log;
 class SchedulerController extends Controller
 {
     /**
-     * Fungsi ini dijalankan setiap 1 jam untuk memasukkan data ke
-     * database rekomendasi_pengairan dan irrigation_controller.
+     * This function runs every 1 hour to insert data into
+     * the recommendation_irrigation and irrigation_controller databases.
      *
-     * 1. Ambil data 1 jam terakhir dari DataSensor.
-     * 2. Jadikan rata-rata lalu ubah ke json dengan format:
+     * 1. Retrieve data from the last 1 hour from DataSensor.
+     * 2. Calculate the average and convert it to JSON format:
      *    {
      *        temperature: ...,
-     *        Humidity: ...,
-     *        SoilMoisture: ...
+     *        humidity: ...,
+     *        soilMoisture: ...
      *    }
-     * 3. Kirim data nomor 2 ke route(ml.irrigation).
-     * 4. Kirim data nomor 2 ke route(ml.predict):
-     * 5. Data nomor 3 dan 4['irrigation'] dikirim ke function saveDatatoRekomendasiPengairan.
+     * 3. Send the data from step 2 to the route (ml.irrigation).
+     * 4. Send the data from step 2 to the route (ml.predict).
+     * 5. Send the data from step 3 and step 4['irrigation'] to the function saveDataToRecommendationIrrigation.
      * @return void
      */
+
     public static function schedule1Hour()
     {
         Log::info('Scheduler 1 hour is running');
-        // Ambil data 1 jam terakhir (seluruh datanya)
+        // Get latest data sensor (1 hour)
         $dataTerakhir = DataSensor::where('timestamp_pengukuran', '>=', Carbon::now()->subHour())
             ->where('timestamp_pengukuran', '<=', Carbon::now())
             ->get();
 
+        // Finish function if no data sensor
         if ($dataTerakhir->count() < 1) {
             return;
         }
 
-        // Jadikan rata-rata lalu ubah ke json
+        // Calculate average
         $temperature = $dataTerakhir->avg('suhu_udara');
         $humidity = $dataTerakhir->avg('kelembapan_udara');
         $soilMoisture = $dataTerakhir->avg('kelembapan_tanah');
 
+        // Convert to JSON
         $data = [
             'temperature' => $temperature,
             'Humidity' => $humidity,
             'SoilMoisture' => $soilMoisture
         ];
 
+        // Get id_penanaman
         $id_penanaman = DataSensor::orderBy('timestamp_pengukuran', 'desc')->first()->id_penanaman;
 
-        // Kirim data ke route(ml.irrigation)
+        // Send data to route('ml.irrigation') to get irrigation recommendation
         $response_irrigation = Http::post(route('ml.irrigation'), $data);
 
+        // If successful, send data to route('ml.predict') to get prediction
         if ($response_irrigation->successful()) {
             $response_irrigation = $response_irrigation->json();
-            // Kasih Tambahan 1 menit supaya scheduler bisa jalan untuk mengirim perintah
+            // Get time, add 1 minute so it will work for the scheduler
             $time_irrigation = Carbon::now()->addMinute()->format('Y-m-d H:i');
 
-            // Simpan data ke database rekomendasi_pengairan
+            // Save the data from route('ml.irrigation') to database rekomendasi_pengairan
             self::saveDatatoRekomendasiPengairan($id_penanaman, $response_irrigation['data'], $time_irrigation);
 
-            // Kirim data ke route(ml.predict)
+            // Send data to route('ml.predict') to get prediction
             $response_predict = Http::post(route('ml.predict'), $data);
             if ($response_predict->successful()) {
                 $response_predict = $response_predict->json();
                 $time_prediksi = $response_predict['data']['predict']['Time'];
 
-                // Simpan data ke database rekomendasi_pemupukan
+                // Save the data from route('ml.predict') to database rekomendasi_pengairan
                 self::saveDatatoRekomendasiPengairan($id_penanaman, $response_predict['data']['irrigation']['data'], $time_prediksi);
             }
         }
@@ -84,18 +89,18 @@ class SchedulerController extends Controller
     }
 
     /**
-     * Fungsi ini dijalankan untuk menyimpan 2 data ke database
-     * 1. Simpan data yang diterima ke database rekomendasi_pengairan.
-     *    Notes: Cari message apakah sudah ada, jika ada update, jika tidak ada buat baru
-     * 2. Jika alatnya hidup, simpan data tersebut ke
-     *    database irrigation_controller.
+     * This function is executed to save 2 pieces of data into the database:
+     * 1. Save the received data to the recommendation_irrigation database.
+     *    Notes: Check if the message already exists, if it does, update it; if not, create a new one.
+     * 2. If the device is active, save the data to the irrigation_controller database.
      *
-     * Data yang disimpan:
+     * Data to be saved:
      * - willSend = 1
      * - isSent = 0
      * - mode = auto
      *
      */
+
     static function saveDatatoRekomendasiPengairan($id_penanaman, $data, $time_irrigation)
     {
         $debit = 7;
@@ -144,48 +149,46 @@ class SchedulerController extends Controller
     }
 
     /**
-     * Fungsi ini dijalankan setiap 1 menit untuk memeriksa apakah
-     * ada data pengairan yang harus dikirim ke Antares.
-     * 1. cek apakah ada data pengairan/pemupukan yang sedang dikirim ke Antares
-     *      a. kalau ada, cek apakah sudah selesai
-     *          i. kalau sudah selesai, ubah sedang_berjalan menjadi 0, kirim data close ke Antares
-     *          ii. kalau belum selesai, selesaikan fungsi
-     * b. kalau tidak ada, lanjut ke langkah 2
-     * 2. Ambil data irrigation_controller.
-     * 3. Periksa apakah willSend = 1 dan isSent = 0:
-     *    a. Jika tidak sesuai, selesaikan fungsi.
-     *    b. Jika sesuai, lanjut ke langkah 4.
-     * 4. Periksa apakah waktu_mulai sesuai dengan sekarang:
-     *    a. Jika tidak sesuai, selesaikan fungsi.
-     *    b. Jika sesuai, lanjut ke langkah 5.
-     * 5. Kirim data open ke antares
-     * 6. Update data isSent = 1.
-     * 7. Tambahkan data ke log_aksi.
+     * This function runs every 1 minute to check if there is irrigation data
+     * that needs to be sent to Antares.
+     * 1. Check if there is irrigation data currently being sent to Antares:
+     *      a. If yes, check if it has been completed:
+     *          i. If completed, set 'sedang_berjalan' to 0, send close data to Antares.
+     *          ii. If not completed, exit the function.
+     *      b. If no, proceed to step 2.
+     * 2. Retrieve data from irrigation_controller.
+     * 3. Check if 'willSend' is 1 and 'isSent' is 0:
+     *    a. If not, exit the function.
+     *    b. If yes, proceed to step 4.
+     * 4. Check if 'waktu_mulai' matches the current time:
+     *    a. If not, exit the function.
+     *    b. If yes, proceed to step 5.
+     * 5. Send open data to Antares.
+     * 6. Update 'isSent' to 1.
+     * 7. Add data to the log_actions.
      *
      * @return void
      */
+
     public static function scheduleIrrigation()
     {
         Log::info("schedule irrigation started");
-        // Cek di log aksi, apakah sudah ada data pengairan yang dikirim ke Antares
-        // Jika sudah ada, cek apakah waktu sekarang (di irrigation controller) == waktu selesai
-        // kalau tidak, selesaikan fungsi
-        // kalau iya, ubah sedang_berjalan menjadi 0
+        // Check in the log_aksi if there is already irrigation data sent to Antares
+        // If yes, check if the current time (in irrigation_controller) == the completion time
+        // If not, exit the function
+        // If yes, set 'sedang_berjalan' to 0
+
         $waktu_sekarang = Carbon::now()->format('Y-m-d H:i');
         $id_penanaman = Penanaman::where('alat_terpasang', true)->first()->id_penanaman;
         $tipe = TipeInstruksi::where('nama_tipe', 'pengairan')->first()->id_tipe_instruksi;
 
-        $logAksi = LogAksi::where('sedang_berjalan', true);
+        $logAksi = LogAksi::where('sedang_berjalan', true)->where('id_tipe_instruksi', $tipe);
 
-        // Kalau ada yang sedang berjalan, cek apakah sudah selesai
+        // If there is an action running, check if it is completed
         if ($logAksi->count() > 0) {
-            if ($logAksi->first()->id_tipe_instruksi != $tipe) {
-                return;
-            }
-
             $waktu_selesai = Carbon::parse($logAksi->first()->irrigation_controller->waktu_selesai)->format('Y-m-d H:i');
 
-            // Cek apakah alat sudah selesai berjalan
+            // Check if the device has finished running
             if ($waktu_sekarang == $waktu_selesai) {
                 // Send downlink to Antares to turn off the device
                 $kode = Self::convertToAntaresCode('mati', 'air');
@@ -193,7 +196,7 @@ class SchedulerController extends Controller
                     'data' => $kode
                 ]);
 
-                // Ubah sedang_berjalan menjadi 0
+                // Set sedang_berjalan to 0
                 $logAksi->update([
                     'sedang_berjalan' => false,
                     'updated_at' => Carbon::now(),
@@ -203,8 +206,7 @@ class SchedulerController extends Controller
             return;
         }
 
-        // Kalau tidak ada aksi yang sedang berjalan
-        // Ambil data irrigation_controller
+        // Get irrigation_controller data
         $now = Carbon::now();
 
         $irrigation_controller = IrrigationController::where('willSend', 1)
@@ -213,35 +215,37 @@ class SchedulerController extends Controller
             ->whereTime('waktu_mulai', '=', $now->format('H:i'))
             ->get();
 
-        // Jika tidak ada data, selesaikan fungsi
+        // If there is no data, exit the function
         if ($irrigation_controller->count() <= 0) {
             return;
         }
 
         $irrigation_controller = $irrigation_controller->first();
 
-        // Cek apakah sudah waktunya untuk mengirimkan data di antares
+        // Check if it is time to send data to antares
         $waktu_mulai = Carbon::parse($irrigation_controller->waktu_mulai)->format('Y-m-d H:i');
         if ($waktu_mulai != $waktu_sekarang) {
             return;
         }
 
-        // Ambil data durasi dari irrigation_controller
+        // Get durasi from irrigation_controller
         $durasi = $irrigation_controller->durasi_detik;
+
+        // Convert to device code
         $kode = self::convertToAntaresCode('nyala', 'air');
 
-        // Kirim data ke Antares route(antares.downlink)
+        // Send data to Antares route(antares.downlink)
         $response = Http::post(route('antares.downlink'), [
             'data' => $kode
         ]);
 
-        // Jika berhasil, update data isSent = 1
+        // If successful, update data isSent = 1
         if ($response->successful()) {
             $irrigation_controller->update([
                 'isSent' => 1
             ]);
 
-            // Tambahkan data ke log_aksi
+            // Add data ke log_aksi
             $id_irrigation_controller = $irrigation_controller->id_irrigation_controller;
             LogAksi::create([
                 'id_penanaman' => $id_penanaman,
@@ -291,50 +295,48 @@ class SchedulerController extends Controller
 
 
     /**
-     * Fungsi ini dijalankan setiap 1 menit untuk memeriksa apakah
-     * ada data pupuk yang harus dikirim ke Antares.
+     * This function runs every 1 minute to check if there is fertilizer data
+     * that needs to be sent to Antares.
      *
-     * 1. cek apakah ada data pemupukan/pengairan yang sedang berjalan di alat
-     *      a. kalau ada, cek apakah sudah selesai
-     *          i. kalau sudah selesai, ubah sedang_berjalan menjadi 0, kirim perintah close ke Antares
-     *          ii. kalau belum selesai, selesaikan fungsi
-     * b. kalau tidak ada, lanjut ke langkah 2
-     * 2. Ambil data fertilizer_control.
-     * 3. Periksa apakah waktu_mulai sesuai dengan sekarang:
-     *    a. Jika tidak sesuai, selesaikan fungsi.
-     *    b. Jika sesuai, lanjut ke langkah 4.
-     * 4. Periksa apakah willSend = 1 dan isSent = 0:
-     *    a. Jika tidak sesuai, selesaikan fungsi.
-     *    b. Jika sesuai, lanjut ke langkah 5.
-     * 5. Kirim data open ke antares
-     * 6. Update data isSent = 1.
-     * 7. Tambahkan data ke log_aksi.
+     * 1. Check if there is ongoing fertilizer data in the device:
+     *      a. If yes, check if it has been completed:
+     *          i. If completed, set 'sedang_berjalan' to 0, send close command to Antares.
+     *          ii. If not completed, exit the function.
+     *      b. If no, proceed to step 2.
+     * 2. Retrieve data from fertilizer_control.
+     * 3. Check if 'waktu_mulai' matches the current time:
+     *    a. If not, exit the function.
+     *    b. If yes, proceed to step 4.
+     * 4. Check if 'willSend' is 1 and 'isSent' is 0:
+     *    a. If not, exit the function.
+     *    b. If yes, proceed to step 5.
+     * 5. Send open data to Antares.
+     * 6. Update 'isSent' to 1.
+     * 7. Add data to the log_actions.
      *
      * @return void
      */
+
     public static function scheduleFertilizer()
     {
         Log::info("Schedule Fertilizer");
 
-        // Cek di log aksi, apakah sudah ada data pengairan yang dikirim ke Antares
-        // Jika sudah ada, cek apakah waktu sekarang (di irrigation controller) == waktu selesai
-        // kalau tidak, selesaikan fungsi
-        // kalau iya, ubah sedang_berjalan menjadi 0
+        // Check in the log_aksi if there is already fertilizer data sent to Antares
+        // If yes, check if the current time (in fertilizer_controller) == the completion time
+        // If not, exit the function
+        // If yes, set 'sedang_berjalan' to 0
+
         $waktu_sekarang = Carbon::now()->format('Y-m-d H:i');
         $id_penanaman = Penanaman::where('alat_terpasang', true)->first()->id_penanaman;
         $tipe = TipeInstruksi::where('nama_tipe', 'pemupukan')->first()->id_tipe_instruksi;
 
-        $logAksi = LogAksi::where('sedang_berjalan', true);
+        $logAksi = LogAksi::where('sedang_berjalan', true)->where('id_tipe_instruksi', $tipe);
 
-        // Kalau ada yang sedang berjalan, cek apakah sudah selesai
+        // If there is an action running, check if it is completed
         if ($logAksi->count() > 0) {
-            // if tipe logAksi == $tipe
-            if ($logAksi->first()->id_tipe_instruksi != $tipe) {
-                return;
-            }
             $waktu_selesai = Carbon::parse($logAksi->first()->fertilizer_controller->waktu_selesai)->format('Y-m-d H:i');
 
-            // Cek apakah alat sudah selesai berjalan
+            // Check if the device has finished running
             if ($waktu_sekarang == $waktu_selesai) {
                 // Send downlink to Antares to turn off the device
                 $kode = Self::convertToAntaresCode('mati', 'pupuk');
@@ -342,7 +344,7 @@ class SchedulerController extends Controller
                     'data' => $kode
                 ]);
 
-                // Ubah sedang_berjalan menjadi 0
+                // Set sedang_berjalan to 0
                 $logAksi->update([
                     'sedang_berjalan' => false,
                     'updated_at' => Carbon::now(),
@@ -352,7 +354,7 @@ class SchedulerController extends Controller
             return;
         }
 
-        // Ambil data fertilizer_control
+        // Get fertilizer_controller data
         $now = Carbon::now();
         $fertilizer_control = FertilizerController::where('willSend', 1)
             ->where('isSent', 0)
@@ -361,37 +363,38 @@ class SchedulerController extends Controller
             ->get();
 
 
-        // Jika tidak ada data, selesaikan fungsi
+        // If there is no data, exit the function
         if ($fertilizer_control->count() <= 0) {
             return;
         }
 
         $fertilizer_control = $fertilizer_control->first();
 
-        // Cek apakah sudah waktunya untuk mengirimkan data di antares
+        // Check if it is time to send data to antares
         $waktu_mulai = Carbon::parse($fertilizer_control->waktu_mulai)->format('Y-m-d H:i');
         $waktu_sekarang = Carbon::now()->format('Y-m-d H:i');
         if ($waktu_mulai != $waktu_sekarang) {
             return;
         }
 
-        // Ambil data durasi dari fertilizer_control
+        // Get durasi from fertilizer_controller
         $durasi = $fertilizer_control->durasi_detik;
+        // Convert to device code
         $kode = self::convertToAntaresCode('nyala', 'pupuk');
 
-        // Kirim data ke Antares route(antares.downlink)
+        // Send data to Antares route(antares.downlink)
         $response = Http::post(route('antares.downlink'), [
             'data' => $kode
         ]);
 
-        // Jika berhasil, update data isSent = 1
+        // If successful, update data isSent = 1
         if ($response->successful()) {
             $fertilizer_control->update([
                 'isSent' => 1
             ]);
 
-            // Tambahkan data ke log_aksi
-            $id_fertilizer_control = $fertilizer_control->id_fertilizer_control;
+            // Add data ke log_aksi
+            $id_fertilizer_control = $fertilizer_control->id_fertilizer_controller;
             LogAksi::create([
                 'id_penanaman' => $id_penanaman,
                 'id_tipe_instruksi' => $tipe,

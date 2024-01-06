@@ -111,14 +111,14 @@ class AntaresController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      *
-     * Permintaan ke {{ config('services.antares.url') }}:
+     * Request to {{ config('services.antares.url') }}:
      *
      * Headers:
      * - 'X-M2M-Origin': {{ env('ANTARES_ACCESS_KEY') }};
      * - 'Content-Type': application/json;ty=4;
      * - 'Accept': application/json;
      *
-     * Contoh Body:
+     * Body Example:
      * {
      *     "m2m:cin": {
      *         "con": "{\"type\":\"downlink\", \"data\":\"{{ config('services.device.air_nyala_10_menit ) }}\"}"
